@@ -541,6 +541,28 @@ class Booking extends EA_Controller
         return $is_still_available ? $appointment['id_users_provider'] : null;
     }
 
+
+    public function search_any_provider_for_select_date(): void
+    {
+       try {
+            $service_id = request('serviceId');
+            $selected_date_string = request('selectedDate');
+            $exclude_provider_ids = request('excludeProviderIds') ?? [];
+            $selected_date = new DateTime($selected_date_string);
+
+            $date = $selected_date->format('Y-m-d');
+            $hour = $selected_date->format('H:i');
+
+            $provider_id = $this->search_any_provider($service_id, $date, $hour, $exclude_provider_ids);
+
+            json_response([
+              'provider_id' => $provider_id,
+            ]);
+            } catch (Throwable $e) {
+            json_exception($e);
+            }
+    }
+
     /**
      * Search for any provider that can handle the requested service.
      *
@@ -549,12 +571,13 @@ class Booking extends EA_Controller
      * @param int $service_id Service ID
      * @param string $date Selected date (Y-m-d).
      * @param string|null $hour Selected hour (H:i).
+     * @param array $exclude_provider_ids Optional array of provider IDs to exclude from search
      *
      * @return int|null Returns the ID of the provider that can provide the service at the selected date.
      *
      * @throws Exception
      */
-    protected function search_any_provider(int $service_id, string $date, ?string $hour = null): ?int
+    protected function search_any_provider(int $service_id, string $date, ?string $hour = null, array $exclude_provider_ids = []): ?int
     {
         $available_providers = $this->providers_model->get_available_providers(true);
 
@@ -565,6 +588,11 @@ class Booking extends EA_Controller
         $max_hours_count = 0;
 
         foreach ($available_providers as $provider) {
+            // Skip if provider is in the exclude list
+            if (in_array($provider['id'], $exclude_provider_ids)) {
+                continue;
+            }
+
             foreach ($provider['services'] as $provider_service_id) {
                 if ($provider_service_id == $service_id) {
                     // Check if the provider is available for the requested date.
@@ -603,6 +631,8 @@ class Booking extends EA_Controller
             $provider_id = request('provider_id');
             $service_id = request('service_id');
             $selected_date = request('selected_date');
+            $exclude_provider_ids = request('excludeProviderIds') ?? [];
+
 
             // Do not continue if there was no provider selected (more likely there is no provider in the system).
 
@@ -628,6 +658,11 @@ class Booking extends EA_Controller
                 $available_hours = [];
 
                 foreach ($providers as $provider) {
+                    // Skip if provider is in the exclude list
+                    if (in_array($provider['id'], $exclude_provider_ids)) {
+                        continue;
+                    }
+
                     if (!in_array($service_id, $provider['services'])) {
                         continue;
                     }
@@ -685,6 +720,7 @@ class Booking extends EA_Controller
             $provider_id = request('provider_id');
             $service_id = request('service_id');
             $appointment_id = request('appointment_id');
+            $exclude_provider_ids = request('excludeProviderIds') ?? [];
             $manage_mode = filter_var(request('manage_mode'), FILTER_VALIDATE_BOOLEAN);
             $selected_date_string = request('selected_date');
             $selected_date = new DateTime($selected_date_string);
@@ -710,6 +746,12 @@ class Booking extends EA_Controller
 
                 // Finding at least one slot of availability.
                 foreach ($provider_ids as $current_provider_id) {
+
+                    // Skip if provider is in the exclude list
+                    if (in_array($current_provider_id, $exclude_provider_ids)) {
+                        continue;
+                    }
+
                     $provider = $this->providers_model->find($current_provider_id);
 
                     $available_hours = $this->availability->get_available_hours(

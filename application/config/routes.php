@@ -150,6 +150,12 @@ $route['api/v1/settings/(:any)']['put'] = 'api/v1/settings_api_v1/update/$1';
 
 $route['api/v1/availabilities']['get'] = 'api/v1/availabilities_api_v1/get';
 
+$route['api/v1/get-unavailable-dates']['get'] = 'booking/get_unavailable_dates';
+
+$route['api/v1/get-available-hours']['get'] = 'booking/get_available_hours';
+
+$route['api/v1/search-any-provider']['get'] = 'booking/search_any_provider_for_select_date';
+
 /*
 | -------------------------------------------------------------------------
 | CUSTOM ROUTING

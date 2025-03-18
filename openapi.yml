@@ -68,6 +68,52 @@ paths:
       security:
         - BearerToken: [ ]
         - BasicAuth: [ ]
+  /UnAvailabilitiesDates:
+    get:
+      tags:
+        - availabilities
+      summary: Gets un availability dates
+      parameters:
+        - name: provider_id
+          in: query
+          schema:
+            type: integer
+        - name: service_id
+          in: query
+          schema:
+            type: integer
+        - name: selected_date
+          in: query
+          schema:
+            type: string
+        - name: manage_mode
+          in: query
+          schema:
+            type: boolean
+        - name: appointment_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerToken: [ ]
+        - BasicAuth: [ ]
   /appointments:
     get:
       tags:
@@ -1770,6 +1816,10 @@ paths:
 components:
   schemas:
     Availabilities:
+      type: array
+      items:
+        type: string
+    UnAvailabilitiesDates:
       type: array
       items:
         type: string
